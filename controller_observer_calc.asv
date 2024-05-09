@@ -1,0 +1,63 @@
+
+Ts = 0.1;
+
+% Define matrices
+
+A = [
+    -2.5, -1;
+    1, 0
+];
+
+B = [
+    1; 0
+];
+
+C = [
+    0, 1
+];
+
+D = [
+    0
+];
+
+
+% Calculate system
+sysc = ss(A, B, C, D);
+sysd = c2d(sysc, Ts);
+
+% Extract Ad, Bd, Cd, and Dd
+Ad = sysd.A;
+Bd = sysd.B;
+Cd = sysd.C;
+Dd = sysd.D;
+
+% Optimize using dlqr
+
+Q11 = 100;
+Q22 = 1;
+R = 1/2*1;
+N = 1/2*[0; 0];
+Q = 1/2*[Q11, 0;
+    0, Q22];
+
+[K, S, e] = dlqr(Ad, Bd, Q, R);
+
+Kr = 1 / ((-Cd-Dd*K)*(inv(eye(2)-Ad+Bd*K)*Bd)+Dd);
+
+Adc = Ad - Bd*K;
+Bdc = Bd * Kr;
+Cdc = Cd - Dd*K;
+Ddc = Dd * Kr;
+
+sys_control = ss(Adc, Bdc, C)
+
+con_poles = eig((Adc));
+obs_poles = con_poles / 2;
+
+L = place(Adc', Cdc', obs_poles)';
+
+step(sysd)
+
+
+
+
